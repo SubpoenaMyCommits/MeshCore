@@ -32,7 +32,6 @@ jobs:
       - name: Build ${{ matrix.environment }}
         env:
           FIRMWARE_VERSION: v1.18-SmartRXPS-${{ github.run_number }}
-          DISABLE_DEBUG: 1
         run: bash build.sh build-firmware ${{ matrix.environment }}
       - uses: actions/upload-artifact@v4
         with:
