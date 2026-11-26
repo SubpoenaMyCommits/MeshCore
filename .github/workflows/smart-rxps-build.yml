@@ -1,0 +1,61 @@
+name: SmartRXPS Build
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - smart-rxps
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-build-environment
+      - name: Unit tests
+        run: pio test -e native -vv
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - t1000e_companion_radio_ble
+          - Heltec_v3_repeater
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-build-environment
+      - name: Build ${{ matrix.environment }}
+        env:
+          FIRMWARE_VERSION: v1.18-SmartRXPS-${{ github.run_number }}
+          DISABLE_DEBUG: 1
+        run: sh build.sh build-firmware ${{ matrix.environment }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.environment }}
+          path: out/*
+
+  release:
+    needs: [test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: smart-rxps-build-${{ github.run_number }}
+          name: SmartRXPS test build ${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          body: |
+            Experimental SmartRXPS firmware on EasySkyMesh PowerSaving v18 (MeshCore 1.18).
+            See docs/smart_rxps.md on the smart-rxps branch.
+            - T1000-E companion (BLE): flash the .uf2 (or .zip for DFU)
+            - Heltec V3 repeater: `-freshInstall-merged.bin` for a clean flash, `-upgrade.bin` over an existing install
+          files: out/*
