@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - smart-rxps
+      - smart-rxps-dev
 
 jobs:
   test:
@@ -53,7 +54,7 @@ jobs:
           target_commitish: ${{ github.sha }}
           prerelease: true
           body: |
-            Experimental SmartRXPS firmware on EasySkyMesh PowerSaving v18 (MeshCore 1.18).
+            Experimental SmartRXPS firmware on EasySkyMesh ${{ github.ref_name }} (MeshCore 1.18).
             See docs/smart_rxps.md on the smart-rxps branch.
             - T1000-E companion (BLE): flash the .uf2 (or .zip for DFU)
             - Heltec V3 repeater: `-freshInstall-merged.bin` for a clean flash, `-upgrade.bin` over an existing install
